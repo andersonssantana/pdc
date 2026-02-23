@@ -7,17 +7,18 @@ export const LoginForm = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setLoading(true);
 
-    Meteor.loginWithPassword(username, password, (err) => {
+    try {
+      await Meteor.loginWithPasswordAsync(username, password);
+    } catch (err) {
+      setError(err.reason || "Invalid username or password");
+    } finally {
       setLoading(false);
-      if (err) {
-        setError(err.reason || "Login failed");
-      }
-    });
+    }
   };
 
   return (
