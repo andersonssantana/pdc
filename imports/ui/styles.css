@@ -345,6 +345,13 @@ a {
   margin-top: var(--spacing-sm);
 }
 
+.login-logo {
+  width: 5rem;
+  height: 5rem;
+  margin: 0 auto var(--spacing-md);
+  display: block;
+}
+
 /* ============ Form Elements ============ */
 .form-group {
   display: flex;

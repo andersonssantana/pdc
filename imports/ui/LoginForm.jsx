@@ -23,6 +23,7 @@ export const LoginForm = () => {
   return (
     <div className="login-container">
       <div className="login-card card">
+        <img src="/images/pink_diamond_logo.png" alt="Pink Diamond Collective" className="login-logo" />
         <h1 className="login-title">Pink Diamond Collective</h1>
         <h2 className="login-subtitle">Login</h2>
 
