@@ -1,12 +1,10 @@
 import { useState } from "react";
 import { Meteor } from "meteor/meteor";
-import { ROLES } from "../api/users";
 
 export const UserForm = ({ onClose }) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
-  const [role, setRole] = useState(ROLES.USER);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -15,7 +13,7 @@ export const UserForm = ({ onClose }) => {
     setError("");
     setLoading(true);
 
-    Meteor.call("users.create", { username, password, name, role }, (err) => {
+    Meteor.call("users.create", { username, password, name }, (err) => {
       setLoading(false);
       if (err) {
         setError(err.reason || "Failed to create user");
@@ -77,20 +75,6 @@ export const UserForm = ({ onClose }) => {
               required
               minLength={6}
             />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="role" className="form-label">Role *</label>
-            <select
-              id="role"
-              className="form-input form-select"
-              value={role}
-              onChange={(e) => setRole(e.target.value)}
-              disabled={loading}
-            >
-              <option value={ROLES.USER}>User</option>
-              <option value={ROLES.ADMIN}>Admin</option>
-            </select>
           </div>
 
           <div className="modal-actions">

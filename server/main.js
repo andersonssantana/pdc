@@ -238,7 +238,7 @@ Meteor.methods({
       throw new Meteor.Error("not-authorized", "Only admins can create users");
     }
 
-    const { username, password, name, role } = userData;
+    const { username, password, name } = userData;
 
     if (!username || username.trim() === "") {
       throw new Meteor.Error("invalid-data", "Username is required");
@@ -252,10 +252,6 @@ Meteor.methods({
       throw new Meteor.Error("invalid-data", "Name is required");
     }
 
-    if (![ROLES.ADMIN, ROLES.USER].includes(role)) {
-      throw new Meteor.Error("invalid-data", "Invalid role");
-    }
-
     const existingUser = await Accounts.findUserByUsername(username.trim());
     if (existingUser) {
       throw new Meteor.Error("invalid-data", "Username already exists");
@@ -266,7 +262,7 @@ Meteor.methods({
       password,
       profile: {
         name: name.trim(),
-        role
+        role: ROLES.USER
       }
     });
   },
