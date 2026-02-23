@@ -1,0 +1,134 @@
+import { useState } from "react";
+import { Meteor } from "meteor/meteor";
+import { useSubscribe, useFind } from "meteor/react-meteor-data";
+import { NotesCollection } from "../api/notes";
+import { NoteForm } from "./NoteForm";
+import { NoteItem } from "./NoteItem";
+import { isCurrentUserAdmin } from "../api/users";
+
+export const CustomerDetail = ({ customer, onBack, onEdit }) => {
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const isLoading = useSubscribe("notes.byCustomer", customer._id);
+  const notes = useFind(() =>
+    NotesCollection.find(
+      { customerId: customer._id },
+      { sort: { createdAt: -1 } }
+    )
+  );
+
+  const isAdmin = isCurrentUserAdmin();
+
+  const handleDelete = () => {
+    setDeleting(true);
+    Meteor.call("customers.remove", customer._id, (err) => {
+      setDeleting(false);
+      if (err) {
+        alert(err.reason || "Failed to delete customer");
+      } else {
+        onBack();
+      }
+    });
+  };
+
+  return (
+    <div className="customer-detail">
+      <div className="detail-header">
+        <button className="button button-secondary" onClick={onBack}>
+          &larr; Back to Customers
+        </button>
+        <div className="detail-actions">
+          <button className="button button-secondary" onClick={onEdit}>
+            Edit
+          </button>
+          {isAdmin && (
+            <button
+              className="button button-danger"
+              onClick={() => setShowDeleteConfirm(true)}
+            >
+              Delete
+            </button>
+          )}
+        </div>
+      </div>
+
+      <div className="detail-content card">
+        <h2 className="detail-name">{customer.name}</h2>
+        {customer.company && (
+          <p className="detail-company">{customer.company}</p>
+        )}
+
+        <div className="detail-info">
+          {customer.email && (
+            <div className="detail-row">
+              <span className="detail-label">Email:</span>
+              <a href={`mailto:${customer.email}`} className="detail-value link">
+                {customer.email}
+              </a>
+            </div>
+          )}
+          {customer.phone && (
+            <div className="detail-row">
+              <span className="detail-label">Phone:</span>
+              <a href={`tel:${customer.phone}`} className="detail-value link">
+                {customer.phone}
+              </a>
+            </div>
+          )}
+          {customer.address && (
+            <div className="detail-row">
+              <span className="detail-label">Address:</span>
+              <span className="detail-value">{customer.address}</span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="notes-section">
+        <h3 className="section-title">Notes</h3>
+
+        <NoteForm customerId={customer._id} />
+
+        {isLoading() ? (
+          <div className="loading">Loading notes...</div>
+        ) : notes.length === 0 ? (
+          <div className="empty-state card">
+            <p>No notes yet. Add your first note above.</p>
+          </div>
+        ) : (
+          <div className="notes-list">
+            {notes.map((note) => (
+              <NoteItem key={note._id} note={note} />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {showDeleteConfirm && (
+        <div className="modal-overlay" onClick={() => setShowDeleteConfirm(false)}>
+          <div className="modal card confirm-modal" onClick={(e) => e.stopPropagation()}>
+            <h3>Delete Customer</h3>
+            <p>Are you sure you want to delete {customer.name}? This will also delete all associated notes.</p>
+            <div className="modal-actions">
+              <button
+                className="button button-secondary"
+                onClick={() => setShowDeleteConfirm(false)}
+                disabled={deleting}
+              >
+                Cancel
+              </button>
+              <button
+                className="button button-danger"
+                onClick={handleDelete}
+                disabled={deleting}
+              >
+                {deleting ? "Deleting..." : "Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
