@@ -1,9 +1,17 @@
 import { useState } from "react";
 import { Meteor } from "meteor/meteor";
 
+const initializePhones = (customer) => {
+  if (Array.isArray(customer?.phones) && customer.phones.length > 0) {
+    return customer.phones;
+  }
+  if (customer?.phone) return [customer.phone];
+  return [""];
+};
+
 export const CustomerForm = ({ customer, onClose }) => {
   const [name, setName] = useState(customer?.name || "");
-  const [phone, setPhone] = useState(customer?.phone || "");
+  const [phones, setPhones] = useState(() => initializePhones(customer));
   const [description, setDescription] = useState(customer?.description || "");
   const [notes, setNotes] = useState(customer?.notes || "");
   const [error, setError] = useState("");
@@ -11,12 +19,31 @@ export const CustomerForm = ({ customer, onClose }) => {
 
   const isEditing = !!customer;
 
+  const updatePhone = (index, value) => {
+    const updated = [...phones];
+    updated[index] = value;
+    setPhones(updated);
+  };
+
+  const addPhone = () => {
+    setPhones([...phones, ""]);
+  };
+
+  const removePhone = (index) => {
+    setPhones(phones.filter((_, i) => i !== index));
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     setError("");
     setLoading(true);
 
-    const customerData = { name, phone, description, notes };
+    const customerData = {
+      name,
+      phones: phones.filter(p => p.trim()),
+      description,
+      notes,
+    };
     const method = isEditing ? "customers.update" : "customers.insert";
     const args = isEditing ? [customer._id, customerData] : [customerData];
 
@@ -58,16 +85,39 @@ export const CustomerForm = ({ customer, onClose }) => {
           </div>
 
           <div className="form-group">
-            <label htmlFor="phone" className="form-label">Phone</label>
-            <input
-              type="tel"
-              id="phone"
-              className="form-input"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="Phone number"
+            <label className="form-label">Phone Numbers</label>
+            <div className="phones-input-group">
+              {phones.map((phone, index) => (
+                <div key={index} className="phone-input-row">
+                  <input
+                    type="tel"
+                    className="form-input"
+                    value={phone}
+                    onChange={(e) => updatePhone(index, e.target.value)}
+                    placeholder="Phone number"
+                    disabled={loading}
+                  />
+                  {phones.length > 1 && (
+                    <button
+                      type="button"
+                      className="button-text button-remove-phone"
+                      onClick={() => removePhone(index)}
+                      disabled={loading}
+                    >
+                      &times;
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+            <button
+              type="button"
+              className="button-add-phone"
+              onClick={addPhone}
               disabled={loading}
-            />
+            >
+              + Add Phone
+            </button>
           </div>
 
           <div className="form-group">

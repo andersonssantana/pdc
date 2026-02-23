@@ -110,15 +110,20 @@ Meteor.methods({
       throw new Meteor.Error("not-authorized", "You must be logged in");
     }
 
-    const { name, phone, description, notes } = customerData;
+    const { name, phones, description, notes } = customerData;
 
     if (!name || name.trim() === "") {
       throw new Meteor.Error("invalid-data", "Customer name is required");
     }
 
+    const normalizedPhones = (Array.isArray(phones) ? phones : [])
+      .map(p => p?.trim())
+      .filter(p => p);
+
     return await CustomersCollection.insertAsync({
       name: name.trim(),
-      phone: phone?.trim() || "",
+      phone: normalizedPhones[0] || "",
+      phones: normalizedPhones,
       description: description?.trim() || "",
       notes: notes?.trim() || "",
       createdAt: new Date(),
@@ -132,7 +137,7 @@ Meteor.methods({
       throw new Meteor.Error("not-authorized", "You must be logged in");
     }
 
-    const { name, phone, description, notes } = customerData;
+    const { name, phones, description, notes } = customerData;
 
     if (!name || name.trim() === "") {
       throw new Meteor.Error("invalid-data", "Customer name is required");
@@ -143,10 +148,15 @@ Meteor.methods({
       throw new Meteor.Error("not-found", "Customer not found");
     }
 
+    const normalizedPhones = (Array.isArray(phones) ? phones : [])
+      .map(p => p?.trim())
+      .filter(p => p);
+
     return await CustomersCollection.updateAsync(customerId, {
       $set: {
         name: name.trim(),
-        phone: phone?.trim() || "",
+        phone: normalizedPhones[0] || "",
+        phones: normalizedPhones,
         description: description?.trim() || "",
         notes: notes?.trim() || "",
         updatedAt: new Date()

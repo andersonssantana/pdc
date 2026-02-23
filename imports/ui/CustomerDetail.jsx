@@ -60,14 +60,23 @@ export const CustomerDetail = ({ customer, onBack, onEdit }) => {
         )}
 
         <div className="detail-info">
-          {customer.phone && (
-            <div className="detail-row">
-              <span className="detail-label">Phone:</span>
-              <a href={`tel:${customer.phone}`} className="detail-value link">
-                {customer.phone}
-              </a>
-            </div>
-          )}
+          {(() => {
+            const customerPhones = Array.isArray(customer.phones) && customer.phones.length > 0
+              ? customer.phones
+              : (customer.phone ? [customer.phone] : []);
+            return customerPhones.length > 0 && (
+              <div className="detail-row">
+                <span className="detail-label">{customerPhones.length > 1 ? "Phones:" : "Phone:"}</span>
+                <div className="detail-phones">
+                  {customerPhones.map((phone, idx) => (
+                    <a key={idx} href={`tel:${phone}`} className="detail-value link">
+                      {phone}
+                    </a>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
           {customer.notes && (
             <div className="detail-row">
               <span className="detail-label">Notes:</span>

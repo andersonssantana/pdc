@@ -19,7 +19,10 @@ export const CustomerList = () => {
     if (!searchTerm.trim()) return true;
     const term = searchTerm.toLowerCase();
     const nameMatch = customer.name?.toLowerCase().includes(term);
-    const phoneMatch = customer.phone?.toLowerCase().includes(term);
+    const customerPhones = Array.isArray(customer.phones)
+      ? customer.phones
+      : (customer.phone ? [customer.phone] : []);
+    const phoneMatch = customerPhones.some(p => p?.toLowerCase().includes(term));
     return nameMatch || phoneMatch;
   });
 
@@ -86,9 +89,18 @@ export const CustomerList = () => {
               {customer.description && (
                 <p className="customer-description">{customer.description}</p>
               )}
-              {customer.phone && (
-                <p className="customer-phone">{customer.phone}</p>
-              )}
+              {(() => {
+                const phones = Array.isArray(customer.phones) && customer.phones.length > 0
+                  ? customer.phones
+                  : (customer.phone ? [customer.phone] : []);
+                return phones.length > 0 && (
+                  <div className="customer-phones">
+                    {phones.map((phone, idx) => (
+                      <p key={idx} className="customer-phone">{phone}</p>
+                    ))}
+                  </div>
+                );
+              })()}
             </div>
           ))}
         </div>
