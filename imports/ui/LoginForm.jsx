@@ -13,7 +13,12 @@ export const LoginForm = () => {
     setLoading(true);
 
     try {
-      await Meteor.loginWithPasswordAsync(username, password);
+      await new Promise((resolve, reject) => {
+        Meteor.loginWithPassword(username, password, (err) => {
+          if (err) reject(err);
+          else resolve();
+        });
+      });
     } catch (err) {
       setError(err.reason || "Invalid username or password");
     } finally {
