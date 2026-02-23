@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Meteor } from "meteor/meteor";
 import { useTracker } from "meteor/react-meteor-data";
 import { Header } from "./Header.jsx";
@@ -17,6 +17,13 @@ export const App = () => {
       isAdmin: isCurrentUserAdmin()
     };
   });
+
+  // Reset to customers view when user changes or non-admin tries to access admin view
+  useEffect(() => {
+    if (currentView === "admin" && !isAdmin) {
+      setCurrentView("customers");
+    }
+  }, [user?._id, isAdmin, currentView]);
 
   if (isLoggingIn) {
     return (

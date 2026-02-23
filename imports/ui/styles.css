@@ -847,3 +847,14 @@ a {
   background-color: hsl(220 10% 50% / 0.1);
   color: var(--color-muted);
 }
+
+.user-card-right {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.user-actions {
+  display: flex;
+  gap: var(--spacing-xs);
+}

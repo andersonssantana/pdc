@@ -261,5 +261,50 @@ Meteor.methods({
         role
       }
     });
+  },
+
+  async "users.remove"(userId) {
+    if (!this.userId) {
+      throw new Meteor.Error("not-authorized", "You must be logged in");
+    }
+
+    const currentUser = await Meteor.users.findOneAsync(this.userId);
+    if (!isAdmin(currentUser)) {
+      throw new Meteor.Error("not-authorized", "Only admins can delete users");
+    }
+
+    if (userId === this.userId) {
+      throw new Meteor.Error("invalid-operation", "You cannot delete yourself");
+    }
+
+    const userToDelete = await Meteor.users.findOneAsync(userId);
+    if (!userToDelete) {
+      throw new Meteor.Error("not-found", "User not found");
+    }
+
+    return await Meteor.users.removeAsync(userId);
+  },
+
+  async "users.setPassword"(userId, newPassword) {
+    if (!this.userId) {
+      throw new Meteor.Error("not-authorized", "You must be logged in");
+    }
+
+    const currentUser = await Meteor.users.findOneAsync(this.userId);
+    if (!isAdmin(currentUser)) {
+      throw new Meteor.Error("not-authorized", "Only admins can reset passwords");
+    }
+
+    if (!newPassword || newPassword.length < 6) {
+      throw new Meteor.Error("invalid-data", "Password must be at least 6 characters");
+    }
+
+    const userToUpdate = await Meteor.users.findOneAsync(userId);
+    if (!userToUpdate) {
+      throw new Meteor.Error("not-found", "User not found");
+    }
+
+    await Accounts.setPasswordAsync(userId, newPassword);
+    return true;
   }
 });
