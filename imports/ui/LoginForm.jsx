@@ -24,7 +24,7 @@ export const LoginForm = () => {
     <div className="login-container">
       <div className="login-card card">
         <h1 className="login-title">Pink Diamond Collective</h1>
-        <h2 className="login-subtitle">CRM Login</h2>
+        <h2 className="login-subtitle">Login</h2>
 
         <form onSubmit={handleSubmit} className="login-form">
           {error && <div className="error-message">{error}</div>}

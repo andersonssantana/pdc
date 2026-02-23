@@ -858,3 +858,13 @@ a {
   display: flex;
   gap: var(--spacing-xs);
 }
+
+/* ============ Search Bar ============ */
+.search-bar {
+  margin-bottom: var(--spacing-lg);
+}
+
+.search-input {
+  width: 100%;
+  max-width: 400px;
+}

@@ -14,7 +14,7 @@ export const Header = ({ currentView, onNavigate, isAdmin }) => {
       <nav className="nav container">
         <div className="logo-container">
           <MeteorLogo className="logo" />
-          <h1 className="page-title">Pink Diamond CRM</h1>
+          <h1 className="page-title">Pink Diamond Collective</h1>
         </div>
 
         <div className="nav-center">
