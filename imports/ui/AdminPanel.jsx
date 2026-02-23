@@ -208,7 +208,7 @@ export const AdminPanel = () => {
       )}
 
       {showDeleteConfirm && selectedUser && (
-        <div className="modal-overlay" onClick={closeDeleteConfirm}>
+        <div className="modal-overlay modal-overlay--confirm" onClick={closeDeleteConfirm}>
           <div className="modal card confirm-modal" onClick={(e) => e.stopPropagation()}>
             <h3>Delete User</h3>
             <p>

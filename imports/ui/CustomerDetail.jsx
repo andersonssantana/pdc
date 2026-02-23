@@ -107,7 +107,7 @@ export const CustomerDetail = ({ customer, onBack, onEdit }) => {
       </div>
 
       {showDeleteConfirm && (
-        <div className="modal-overlay" onClick={() => setShowDeleteConfirm(false)}>
+        <div className="modal-overlay modal-overlay--confirm" onClick={() => setShowDeleteConfirm(false)}>
           <div className="modal card confirm-modal" onClick={(e) => e.stopPropagation()}>
             <h3>Delete Customer</h3>
             <p>Are you sure you want to delete {customer.name}? This will also delete all associated notes.</p>

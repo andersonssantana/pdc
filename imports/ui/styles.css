@@ -32,6 +32,13 @@
   --transition-fast: 150ms ease;
   --transition-normal: 200ms ease;
   --transition-slow: 250ms ease;
+
+  /* Safe areas (iPhone notch / home indicator) */
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+
+  /* Bottom navigation height (mobile only) */
+  --bottom-nav-height: 3.5rem;
 }
 
 /* ============ Reset & Base Styles ============ */
@@ -61,6 +68,7 @@ a {
 /* ============ Layout ============ */
 .page {
   min-height: 100vh;
+  min-height: 100dvh;
   background-color: var(--color-background);
 }
 
@@ -367,7 +375,7 @@ a {
 
 .form-input {
   padding: 0.625rem 0.75rem;
-  font-size: 0.875rem;
+  font-size: 1rem;
   font-family: inherit;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
@@ -951,4 +959,262 @@ a {
   display: flex;
   flex-direction: column;
   gap: 0;
+}
+
+/* ============ Bottom Navigation (Mobile Only) ============ */
+.bottom-nav {
+  display: none;
+}
+
+/* ============ Mobile Styles (max-width: 767px) ============ */
+@media (max-width: 767px) {
+  /* -- Bottom Navigation -- */
+  .bottom-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: calc(var(--bottom-nav-height) + var(--safe-area-bottom));
+    padding-bottom: var(--safe-area-bottom);
+    background-color: var(--color-card);
+    border-top: 1px solid var(--color-border);
+    z-index: 50;
+  }
+
+  .bottom-nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.2rem;
+    padding: 0;
+    background: none;
+    border: none;
+    font-family: inherit;
+    font-size: 0.7rem;
+    font-weight: 500;
+    color: var(--color-muted);
+    cursor: pointer;
+    transition: color var(--transition-fast);
+    min-height: 44px;
+  }
+
+  .bottom-nav-item.active {
+    color: var(--color-primary);
+  }
+
+  .bottom-nav-item:active {
+    background-color: hsl(4 70% 55% / 0.05);
+  }
+
+  .bottom-nav-icon {
+    font-size: 1.25rem;
+    line-height: 1;
+  }
+
+  .bottom-nav-label {
+    font-size: 0.65rem;
+    letter-spacing: 0.01em;
+  }
+
+  /* -- Header -- */
+  .header {
+    border-radius: 0;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    padding-top: var(--safe-area-top);
+  }
+
+  .nav {
+    height: 3.5rem;
+  }
+
+  .nav-center {
+    display: none;
+  }
+
+  .nav-right {
+    gap: var(--spacing-sm);
+  }
+
+  .user-display-name {
+    display: none;
+  }
+
+  .nav .admin-badge {
+    display: none;
+  }
+
+  .nav-right .button {
+    min-width: unset;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
+  }
+
+  /* -- Main Content -- */
+  .main {
+    padding-top: var(--spacing-md);
+    padding-bottom: calc(var(--bottom-nav-height) + var(--safe-area-bottom) + var(--spacing-lg));
+  }
+
+  /* -- Modals (Bottom Sheet) -- */
+  .modal-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .modal {
+    max-width: 100%;
+    width: 100%;
+    max-height: 92vh;
+    border-radius: var(--radius) var(--radius) 0 0;
+    padding: var(--spacing-lg) var(--spacing-md);
+    padding-bottom: calc(var(--spacing-lg) + var(--safe-area-bottom));
+  }
+
+  .modal::before {
+    content: '';
+    display: block;
+    width: 2.5rem;
+    height: 0.25rem;
+    background-color: var(--color-border);
+    border-radius: 9999px;
+    margin: 0 auto var(--spacing-md);
+  }
+
+  .modal-actions {
+    flex-direction: column-reverse;
+    gap: var(--spacing-sm);
+  }
+
+  .modal-actions .button {
+    width: 100%;
+  }
+
+  /* Confirm dialogs stay centered */
+  .modal-overlay--confirm {
+    align-items: center;
+    padding: var(--spacing-md);
+  }
+
+  .modal-overlay--confirm .modal {
+    max-width: 400px;
+    border-radius: var(--radius);
+    padding-bottom: var(--spacing-lg);
+  }
+
+  .modal-overlay--confirm .modal::before {
+    display: none;
+  }
+
+  /* -- Touch Targets -- */
+  .button-text {
+    min-height: 44px;
+    padding: 0.625rem 0.75rem;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .button-remove-phone {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 0.625rem;
+    font-size: 1.5rem;
+  }
+
+  .modal-close {
+    min-height: 44px;
+    min-width: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* -- Customer List -- */
+  .customer-list-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--spacing-sm);
+  }
+
+  .customer-list-header .button {
+    width: 100%;
+  }
+
+  .search-input {
+    max-width: 100%;
+  }
+
+  .customer-card {
+    padding: var(--spacing-md);
+  }
+
+  /* -- Customer Detail -- */
+  .detail-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--spacing-sm);
+  }
+
+  .detail-actions {
+    width: 100%;
+  }
+
+  .detail-actions .button {
+    flex: 1;
+  }
+
+  .detail-content {
+    padding: var(--spacing-md);
+  }
+
+  .detail-value.link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: var(--spacing-xs) 0;
+  }
+
+  /* -- Note Form -- */
+  .note-form .button {
+    align-self: stretch;
+    width: 100%;
+  }
+
+  .note-form {
+    padding: var(--spacing-md);
+  }
+
+  /* -- Admin Panel -- */
+  .admin-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--spacing-sm);
+  }
+
+  .admin-header .button {
+    width: 100%;
+  }
+
+  .user-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md);
+  }
+
+  .user-card-right {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  /* -- Login -- */
+  .login-container {
+    min-height: 100dvh;
+    padding: var(--spacing-md);
+    padding-bottom: calc(var(--spacing-md) + var(--safe-area-bottom));
+  }
 }
