@@ -25,6 +25,43 @@ async function seedAdminUser() {
   }
 }
 
+// Publications (registered synchronously at module load time)
+Meteor.publish("links", function () {
+  return LinksCollection.find();
+});
+
+Meteor.publish("customers", function () {
+  if (!this.userId) {
+    return this.ready();
+  }
+  return CustomersCollection.find();
+});
+
+Meteor.publish("notes.byCustomer", function (customerId) {
+  if (!this.userId) {
+    return this.ready();
+  }
+  return NotesCollection.find({ customerId });
+});
+
+Meteor.publish("users.all", async function () {
+  if (!this.userId) {
+    return this.ready();
+  }
+  const user = await Meteor.users.findOneAsync(this.userId);
+  if (!isAdmin(user)) {
+    return this.ready();
+  }
+  return Meteor.users.find({}, {
+    fields: {
+      username: 1,
+      profile: 1,
+      createdAt: 1
+    }
+  });
+});
+
+// Startup: seed data only
 Meteor.startup(async () => {
   // Seed admin user
   await seedAdminUser();
@@ -61,42 +98,6 @@ Meteor.startup(async () => {
       url: "https://www.meteor.com/hosting",
     });
   }
-
-  // Publications
-  Meteor.publish("links", function () {
-    return LinksCollection.find();
-  });
-
-  Meteor.publish("customers", function () {
-    if (!this.userId) {
-      return this.ready();
-    }
-    return CustomersCollection.find();
-  });
-
-  Meteor.publish("notes.byCustomer", function (customerId) {
-    if (!this.userId) {
-      return this.ready();
-    }
-    return NotesCollection.find({ customerId });
-  });
-
-  Meteor.publish("users.all", function () {
-    if (!this.userId) {
-      return this.ready();
-    }
-    const user = Meteor.users.findOne(this.userId);
-    if (!isAdmin(user)) {
-      return this.ready();
-    }
-    return Meteor.users.find({}, {
-      fields: {
-        username: 1,
-        profile: 1,
-        createdAt: 1
-      }
-    });
-  });
 });
 
 Meteor.methods({
