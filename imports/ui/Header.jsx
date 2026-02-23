@@ -1,6 +1,5 @@
 import { Meteor } from "meteor/meteor";
 import { useTracker } from "meteor/react-meteor-data";
-import MeteorLogo from "./meteor-logo.svg";
 
 export const Header = ({ currentView, onNavigate, isAdmin }) => {
   const user = useTracker(() => Meteor.user());
@@ -13,7 +12,7 @@ export const Header = ({ currentView, onNavigate, isAdmin }) => {
     <div className="header">
       <nav className="nav container">
         <div className="logo-container">
-          <MeteorLogo className="logo" />
+          <img src="/images/pink_diamond_logo.png" alt="Pink Diamond Collective" className="logo" />
           <h1 className="page-title">Pink Diamond Collective</h1>
         </div>
 

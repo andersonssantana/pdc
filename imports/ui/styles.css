@@ -576,9 +576,21 @@ a {
   margin-bottom: var(--spacing-sm);
 }
 
-.customer-detail {
+.customer-description {
   font-size: 0.875rem;
   color: var(--color-muted);
+  margin-bottom: var(--spacing-xs);
+}
+
+.customer-phone {
+  font-size: 0.875rem;
+  color: var(--color-muted);
+}
+
+.detail-description {
+  font-size: 1rem;
+  color: var(--color-muted);
+  margin-bottom: var(--spacing-lg);
 }
 
 /* ============ Customer Detail ============ */

@@ -83,14 +83,11 @@ export const CustomerList = () => {
               onClick={() => setSelectedCustomer(customer)}
             >
               <h3 className="customer-name">{customer.name}</h3>
-              {customer.company && (
-                <p className="customer-company">{customer.company}</p>
-              )}
-              {customer.email && (
-                <p className="customer-detail">{customer.email}</p>
+              {customer.description && (
+                <p className="customer-description">{customer.description}</p>
               )}
               {customer.phone && (
-                <p className="customer-detail">{customer.phone}</p>
+                <p className="customer-phone">{customer.phone}</p>
               )}
             </div>
           ))}

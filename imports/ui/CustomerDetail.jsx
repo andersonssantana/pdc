@@ -55,19 +55,11 @@ export const CustomerDetail = ({ customer, onBack, onEdit }) => {
 
       <div className="detail-content card">
         <h2 className="detail-name">{customer.name}</h2>
-        {customer.company && (
-          <p className="detail-company">{customer.company}</p>
+        {customer.description && (
+          <p className="detail-description">{customer.description}</p>
         )}
 
         <div className="detail-info">
-          {customer.email && (
-            <div className="detail-row">
-              <span className="detail-label">Email:</span>
-              <a href={`mailto:${customer.email}`} className="detail-value link">
-                {customer.email}
-              </a>
-            </div>
-          )}
           {customer.phone && (
             <div className="detail-row">
               <span className="detail-label">Phone:</span>
@@ -76,10 +68,10 @@ export const CustomerDetail = ({ customer, onBack, onEdit }) => {
               </a>
             </div>
           )}
-          {customer.address && (
+          {customer.notes && (
             <div className="detail-row">
-              <span className="detail-label">Address:</span>
-              <span className="detail-value">{customer.address}</span>
+              <span className="detail-label">Notes:</span>
+              <span className="detail-value">{customer.notes}</span>
             </div>
           )}
         </div>

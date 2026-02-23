@@ -110,7 +110,7 @@ Meteor.methods({
       throw new Meteor.Error("not-authorized", "You must be logged in");
     }
 
-    const { name, email, phone, company, address } = customerData;
+    const { name, phone, description, notes } = customerData;
 
     if (!name || name.trim() === "") {
       throw new Meteor.Error("invalid-data", "Customer name is required");
@@ -118,10 +118,9 @@ Meteor.methods({
 
     return await CustomersCollection.insertAsync({
       name: name.trim(),
-      email: email?.trim() || "",
       phone: phone?.trim() || "",
-      company: company?.trim() || "",
-      address: address?.trim() || "",
+      description: description?.trim() || "",
+      notes: notes?.trim() || "",
       createdAt: new Date(),
       createdBy: this.userId,
       updatedAt: new Date()
@@ -133,7 +132,7 @@ Meteor.methods({
       throw new Meteor.Error("not-authorized", "You must be logged in");
     }
 
-    const { name, email, phone, company, address } = customerData;
+    const { name, phone, description, notes } = customerData;
 
     if (!name || name.trim() === "") {
       throw new Meteor.Error("invalid-data", "Customer name is required");
@@ -147,10 +146,9 @@ Meteor.methods({
     return await CustomersCollection.updateAsync(customerId, {
       $set: {
         name: name.trim(),
-        email: email?.trim() || "",
         phone: phone?.trim() || "",
-        company: company?.trim() || "",
-        address: address?.trim() || "",
+        description: description?.trim() || "",
+        notes: notes?.trim() || "",
         updatedAt: new Date()
       }
     });

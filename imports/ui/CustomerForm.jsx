@@ -3,10 +3,9 @@ import { Meteor } from "meteor/meteor";
 
 export const CustomerForm = ({ customer, onClose }) => {
   const [name, setName] = useState(customer?.name || "");
-  const [email, setEmail] = useState(customer?.email || "");
   const [phone, setPhone] = useState(customer?.phone || "");
-  const [company, setCompany] = useState(customer?.company || "");
-  const [address, setAddress] = useState(customer?.address || "");
+  const [description, setDescription] = useState(customer?.description || "");
+  const [notes, setNotes] = useState(customer?.notes || "");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -17,7 +16,7 @@ export const CustomerForm = ({ customer, onClose }) => {
     setError("");
     setLoading(true);
 
-    const customerData = { name, email, phone, company, address };
+    const customerData = { name, phone, description, notes };
     const method = isEditing ? "customers.update" : "customers.insert";
     const args = isEditing ? [customer._id, customerData] : [customerData];
 
@@ -59,19 +58,6 @@ export const CustomerForm = ({ customer, onClose }) => {
           </div>
 
           <div className="form-group">
-            <label htmlFor="email" className="form-label">Email</label>
-            <input
-              type="email"
-              id="email"
-              className="form-input"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="customer@example.com"
-              disabled={loading}
-            />
-          </div>
-
-          <div className="form-group">
             <label htmlFor="phone" className="form-label">Phone</label>
             <input
               type="tel"
@@ -79,32 +65,32 @@ export const CustomerForm = ({ customer, onClose }) => {
               className="form-input"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-              placeholder="(555) 123-4567"
+              placeholder="Phone number"
               disabled={loading}
             />
           </div>
 
           <div className="form-group">
-            <label htmlFor="company" className="form-label">Company</label>
+            <label htmlFor="description" className="form-label">Description</label>
             <input
               type="text"
-              id="company"
+              id="description"
               className="form-input"
-              value={company}
-              onChange={(e) => setCompany(e.target.value)}
-              placeholder="Company name"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Brief description"
               disabled={loading}
             />
           </div>
 
           <div className="form-group">
-            <label htmlFor="address" className="form-label">Address</label>
+            <label htmlFor="notes" className="form-label">Additional Notes</label>
             <textarea
-              id="address"
+              id="notes"
               className="form-input form-textarea"
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              placeholder="Street address, city, state"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Any additional notes..."
               disabled={loading}
               rows={3}
             />

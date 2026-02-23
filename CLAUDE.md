@@ -52,6 +52,6 @@ Meteor.call("customers.insert", data, (error, result) => {...});
 - `useTracker()` for reactive Meteor data subscriptions
 
 ## Key Entities
-- **Customer**: name (required), email, phone, company, address
+- **Customer**: name (required), phone, description, notes
 - **Note**: content (required), customerId, createdByName
 - **User**: username, profile.name, profile.role
