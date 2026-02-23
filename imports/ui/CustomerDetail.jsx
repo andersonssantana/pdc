@@ -1,45 +1,82 @@
 import { useState } from "react";
 import { Meteor } from "meteor/meteor";
-import { useSubscribe, useFind } from "meteor/react-meteor-data";
+import { useParams, useNavigate } from "react-router-dom";
+import { useSubscribe, useFind, useTracker } from "meteor/react-meteor-data";
+import { CustomersCollection } from "../api/customers";
 import { NotesCollection } from "../api/notes";
 import { NoteForm } from "./NoteForm";
 import { NoteItem } from "./NoteItem";
+import { CustomerForm } from "./CustomerForm";
 import { isCurrentUserAdmin } from "../api/users";
 
-export const CustomerDetail = ({ customer, onBack, onEdit }) => {
+export const CustomerDetail = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [showEditForm, setShowEditForm] = useState(false);
 
-  const isLoading = useSubscribe("notes.byCustomer", customer._id);
+  const customersLoading = useSubscribe("customers");
+  const isNotesLoading = useSubscribe("notes.byCustomer", id);
+
+  const customer = useTracker(() => {
+    return CustomersCollection.findOne(id);
+  }, [id]);
+
   const notes = useFind(() =>
     NotesCollection.find(
-      { customerId: customer._id },
+      { customerId: id },
       { sort: { createdAt: -1 } }
-    )
+    ),
+    [id]
   );
 
   const isAdmin = isCurrentUserAdmin();
 
   const handleDelete = () => {
     setDeleting(true);
-    Meteor.call("customers.remove", customer._id, (err) => {
+    Meteor.call("customers.remove", id, (err) => {
       setDeleting(false);
       if (err) {
         alert(err.reason || "Failed to delete customer");
       } else {
-        onBack();
+        navigate("/customers");
       }
     });
   };
 
+  const handleBack = () => {
+    navigate("/customers");
+  };
+
+  if (customersLoading()) {
+    return <div className="loading">Loading customer...</div>;
+  }
+
+  if (!customer) {
+    return (
+      <div className="customer-detail">
+        <div className="detail-header">
+          <button className="button button-secondary" onClick={handleBack}>
+            &larr; Back to Customers
+          </button>
+        </div>
+        <div className="empty-state card">
+          <p>Customer not found.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="customer-detail">
       <div className="detail-header">
-        <button className="button button-secondary" onClick={onBack}>
+        <button className="button button-secondary" onClick={handleBack}>
           &larr; Back to Customers
         </button>
         <div className="detail-actions">
-          <button className="button button-secondary" onClick={onEdit}>
+          <button className="button button-secondary" onClick={() => setShowEditForm(true)}>
             Edit
           </button>
           {isAdmin && (
@@ -107,7 +144,7 @@ export const CustomerDetail = ({ customer, onBack, onEdit }) => {
       <div className="notes-section">
         <h3 className="section-title">Notes</h3>
 
-        {isLoading() ? (
+        {isNotesLoading() ? (
           <div className="loading">Loading notes...</div>
         ) : notes.length === 0 ? (
           <div className="empty-state card">
@@ -147,6 +184,13 @@ export const CustomerDetail = ({ customer, onBack, onEdit }) => {
             </div>
           </div>
         </div>
+      )}
+
+      {showEditForm && (
+        <CustomerForm
+          customer={customer}
+          onClose={() => setShowEditForm(false)}
+        />
       )}
     </div>
   );

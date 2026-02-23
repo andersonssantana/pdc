@@ -1,11 +1,15 @@
 import { Meteor } from "meteor/meteor";
 import { useTracker } from "meteor/react-meteor-data";
+import { NavLink, useNavigate } from "react-router-dom";
 
-export const Header = ({ currentView, onNavigate, isAdmin }) => {
+export const Header = ({ isAdmin }) => {
   const user = useTracker(() => Meteor.user());
+  const navigate = useNavigate();
 
   const handleLogout = () => {
-    Meteor.logout();
+    Meteor.logout(() => {
+      navigate("/");
+    });
   };
 
   return (
@@ -18,19 +22,19 @@ export const Header = ({ currentView, onNavigate, isAdmin }) => {
           </div>
 
           <div className="nav-center">
-            <button
-              className={`nav-button ${currentView === "customers" ? "active" : ""}`}
-              onClick={() => onNavigate("customers")}
+            <NavLink
+              to="/customers"
+              className={({ isActive }) => `nav-button ${isActive ? "active" : ""}`}
             >
               Customers
-            </button>
+            </NavLink>
             {isAdmin && (
-              <button
-                className={`nav-button ${currentView === "admin" ? "active" : ""}`}
-                onClick={() => onNavigate("admin")}
+              <NavLink
+                to="/admin"
+                className={({ isActive }) => `nav-button ${isActive ? "active" : ""}`}
               >
                 Admin
-              </button>
+              </NavLink>
             )}
           </div>
 
@@ -49,21 +53,21 @@ export const Header = ({ currentView, onNavigate, isAdmin }) => {
       </div>
 
       <nav className="bottom-nav" aria-label="Main navigation">
-        <button
-          className={`bottom-nav-item ${currentView === "customers" ? "active" : ""}`}
-          onClick={() => onNavigate("customers")}
+        <NavLink
+          to="/customers"
+          className={({ isActive }) => `bottom-nav-item ${isActive ? "active" : ""}`}
         >
           <span className="bottom-nav-icon" aria-hidden="true">👥</span>
           <span className="bottom-nav-label">Customers</span>
-        </button>
+        </NavLink>
         {isAdmin && (
-          <button
-            className={`bottom-nav-item ${currentView === "admin" ? "active" : ""}`}
-            onClick={() => onNavigate("admin")}
+          <NavLink
+            to="/admin"
+            className={({ isActive }) => `bottom-nav-item ${isActive ? "active" : ""}`}
           >
             <span className="bottom-nav-icon" aria-hidden="true">⚙️</span>
             <span className="bottom-nav-label">Admin</span>
-          </button>
+          </NavLink>
         )}
         <button
           className="bottom-nav-item"

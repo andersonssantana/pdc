@@ -1,14 +1,17 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { Meteor } from "meteor/meteor";
 import { useTracker } from "meteor/react-meteor-data";
+import { Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
 import { Header } from "./Header.jsx";
 import { LoginForm } from "./LoginForm.jsx";
 import { CustomerList } from "./CustomerList.jsx";
+import { CustomerDetail } from "./CustomerDetail.jsx";
 import { AdminPanel } from "./AdminPanel.jsx";
 import { isCurrentUserAdmin } from "../api/users";
 
 export const App = () => {
-  const [currentView, setCurrentView] = useState("customers");
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const { user, isLoggingIn, isAdmin } = useTracker(() => {
     return {
@@ -18,12 +21,11 @@ export const App = () => {
     };
   });
 
-  // Reset to customers view when user changes or non-admin tries to access admin view
   useEffect(() => {
-    if (currentView === "admin" && !isAdmin) {
-      setCurrentView("customers");
+    if (location.pathname === "/admin" && !isAdmin && user) {
+      navigate("/customers", { replace: true });
     }
-  }, [user?._id, isAdmin, currentView]);
+  }, [user?._id, isAdmin, location.pathname, navigate]);
 
   if (isLoggingIn) {
     return (
@@ -45,14 +47,17 @@ export const App = () => {
 
   return (
     <div className="page">
-      <Header
-        currentView={currentView}
-        onNavigate={setCurrentView}
-        isAdmin={isAdmin}
-      />
+      <Header isAdmin={isAdmin} />
       <main className="main container">
-        {currentView === "customers" && <CustomerList />}
-        {currentView === "admin" && isAdmin && <AdminPanel />}
+        <Routes>
+          <Route path="/" element={<Navigate to="/customers" replace />} />
+          <Route path="/customers" element={<CustomerList />} />
+          <Route path="/customers/:id" element={<CustomerDetail />} />
+          <Route path="/admin" element={
+            isAdmin ? <AdminPanel /> : <Navigate to="/customers" replace />
+          } />
+          <Route path="*" element={<Navigate to="/customers" replace />} />
+        </Routes>
       </main>
     </div>
   );

@@ -1,13 +1,12 @@
 import { useState } from "react";
 import { useSubscribe, useFind } from "meteor/react-meteor-data";
+import { Link } from "react-router-dom";
 import { CustomersCollection } from "../api/customers";
 import { CustomerForm } from "./CustomerForm";
-import { CustomerDetail } from "./CustomerDetail";
 
 export const CustomerList = () => {
   const [showForm, setShowForm] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState(null);
-  const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
 
   const isLoading = useSubscribe("customers");
@@ -28,20 +27,6 @@ export const CustomerList = () => {
 
   if (isLoading()) {
     return <div className="loading">Loading customers...</div>;
-  }
-
-  if (selectedCustomer) {
-    return (
-      <CustomerDetail
-        customer={selectedCustomer}
-        onBack={() => setSelectedCustomer(null)}
-        onEdit={() => {
-          setEditingCustomer(selectedCustomer);
-          setShowForm(true);
-          setSelectedCustomer(null);
-        }}
-      />
-    );
   }
 
   return (
@@ -80,10 +65,10 @@ export const CustomerList = () => {
       ) : (
         <div className="customer-grid">
           {filteredCustomers.map((customer) => (
-            <div
+            <Link
               key={customer._id}
+              to={`/customers/${customer._id}`}
               className="customer-card card"
-              onClick={() => setSelectedCustomer(customer)}
             >
               <h3 className="customer-name">{customer.name}</h3>
               {customer.description && (
@@ -101,7 +86,7 @@ export const CustomerList = () => {
                   </div>
                 );
               })()}
-            </div>
+            </Link>
           ))}
         </div>
       )}

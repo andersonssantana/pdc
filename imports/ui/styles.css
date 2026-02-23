@@ -457,6 +457,7 @@ a {
   border-radius: var(--radius-sm);
   cursor: pointer;
   transition: color var(--transition-fast), background-color var(--transition-fast);
+  text-decoration: none;
 }
 
 .nav-button:hover {
@@ -570,6 +571,9 @@ a {
   padding: var(--spacing-lg);
   cursor: pointer;
   transition: box-shadow var(--transition-slow), transform var(--transition-slow);
+  text-decoration: none;
+  color: inherit;
+  display: block;
 }
 
 .customer-card:hover {
@@ -1016,6 +1020,7 @@ a {
     cursor: pointer;
     transition: color var(--transition-fast);
     min-height: 44px;
+    text-decoration: none;
   }
 
   .bottom-nav-item.active {
