@@ -1203,6 +1203,7 @@ a {
 
   .note-form {
     padding: var(--spacing-md);
+    margin-top: var(--spacing-md);
   }
 
   /* -- Admin Panel -- */
