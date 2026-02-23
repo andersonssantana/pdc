@@ -677,6 +677,23 @@ a {
   text-decoration: underline;
 }
 
+.detail-audit {
+  margin-top: var(--spacing-md);
+  padding-top: var(--spacing-sm);
+  border-top: 1px solid var(--color-border);
+  font-size: 0.8rem;
+  color: var(--color-muted);
+}
+
+.audit-info strong {
+  font-weight: 600;
+  color: var(--color-foreground);
+}
+
+.audit-separator {
+  color: var(--color-muted);
+}
+
 /* ============ Notes Section ============ */
 .notes-section {
   margin-top: var(--spacing-xl);

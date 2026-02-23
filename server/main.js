@@ -120,6 +120,9 @@ Meteor.methods({
       .map(p => p?.trim())
       .filter(p => p);
 
+    const user = await Meteor.users.findOneAsync(this.userId);
+    const userName = user?.profile?.name || user?.username || "Unknown";
+
     return await CustomersCollection.insertAsync({
       name: name.trim(),
       phone: normalizedPhones[0] || "",
@@ -128,7 +131,10 @@ Meteor.methods({
       notes: notes?.trim() || "",
       createdAt: new Date(),
       createdBy: this.userId,
-      updatedAt: new Date()
+      createdByName: userName,
+      updatedAt: new Date(),
+      updatedBy: this.userId,
+      updatedByName: userName
     });
   },
 
@@ -152,6 +158,9 @@ Meteor.methods({
       .map(p => p?.trim())
       .filter(p => p);
 
+    const user = await Meteor.users.findOneAsync(this.userId);
+    const userName = user?.profile?.name || user?.username || "Unknown";
+
     return await CustomersCollection.updateAsync(customerId, {
       $set: {
         name: name.trim(),
@@ -159,7 +168,9 @@ Meteor.methods({
         phones: normalizedPhones,
         description: description?.trim() || "",
         notes: notes?.trim() || "",
-        updatedAt: new Date()
+        updatedAt: new Date(),
+        updatedBy: this.userId,
+        updatedByName: userName
       }
     });
   },

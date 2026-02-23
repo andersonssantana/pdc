@@ -84,6 +84,24 @@ export const CustomerDetail = ({ customer, onBack, onEdit }) => {
             </div>
           )}
         </div>
+
+        <div className="detail-audit">
+          {customer.createdByName && (
+            <span className="audit-info">
+              Created by <strong>{customer.createdByName}</strong>
+              {customer.createdAt && ` on ${new Date(customer.createdAt).toLocaleDateString()}`}
+            </span>
+          )}
+          {customer.updatedByName && customer.updatedBy !== customer.createdBy && (
+            <span className="audit-separator"> · </span>
+          )}
+          {customer.updatedByName && (customer.updatedBy !== customer.createdBy || customer.updatedAt?.getTime?.() !== customer.createdAt?.getTime?.()) && (
+            <span className="audit-info">
+              Last updated by <strong>{customer.updatedByName}</strong>
+              {customer.updatedAt && ` on ${new Date(customer.updatedAt).toLocaleDateString()}`}
+            </span>
+          )}
+        </div>
       </div>
 
       <div className="notes-section">
