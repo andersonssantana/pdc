@@ -107,13 +107,11 @@ export const CustomerDetail = ({ customer, onBack, onEdit }) => {
       <div className="notes-section">
         <h3 className="section-title">Notes</h3>
 
-        <NoteForm customerId={customer._id} />
-
         {isLoading() ? (
           <div className="loading">Loading notes...</div>
         ) : notes.length === 0 ? (
           <div className="empty-state card">
-            <p>No notes yet. Add your first note above.</p>
+            <p>No notes yet. Add your first note below.</p>
           </div>
         ) : (
           <div className="notes-list">
@@ -122,6 +120,8 @@ export const CustomerDetail = ({ customer, onBack, onEdit }) => {
             ))}
           </div>
         )}
+
+        <NoteForm customerId={customer._id} />
       </div>
 
       {showDeleteConfirm && (
