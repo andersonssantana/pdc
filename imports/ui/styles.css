@@ -112,18 +112,6 @@ a {
   height: 4rem;
 }
 
-.logo-text {
-  font-weight: 600;
-  color: var(--color-foreground);
-  display: none;
-}
-
-@media (min-width: 640px) {
-  .logo-text {
-    display: inline;
-  }
-}
-
 .page-title {
   font-size: 1.25rem;
   font-weight: 700;
@@ -298,19 +286,6 @@ a {
   color: var(--color-primary);
 }
 
-.resource-icon {
-  width: 1rem;
-  height: 1rem;
-  color: var(--color-muted);
-  opacity: 0;
-  transition: opacity var(--transition-fast), color var(--transition-fast);
-}
-
-.resource-link:hover .resource-icon {
-  opacity: 1;
-  color: var(--color-primary);
-}
-
 /* ============ Login Form ============ */
 .login-container {
   display: flex;
@@ -402,10 +377,6 @@ a {
 .form-textarea {
   resize: vertical;
   min-height: 80px;
-}
-
-.form-select {
-  cursor: pointer;
 }
 
 /* ============ Error Message ============ */
@@ -588,13 +559,6 @@ a {
   margin-bottom: var(--spacing-xs);
 }
 
-.customer-company {
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--color-primary);
-  margin-bottom: var(--spacing-sm);
-}
-
 .customer-description {
   font-size: 0.875rem;
   color: var(--color-muted);
@@ -641,13 +605,6 @@ a {
   font-weight: 700;
   color: var(--color-foreground);
   margin-bottom: var(--spacing-xs);
-}
-
-.detail-company {
-  font-size: 1rem;
-  font-weight: 500;
-  color: var(--color-primary);
-  margin-bottom: var(--spacing-lg);
 }
 
 .detail-info {

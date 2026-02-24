@@ -25,7 +25,7 @@ npm run visualize      # Build with bundle visualizer
 - `/tests/` - Mocha test suite
 
 ### Data Layer (Meteor Patterns)
-- **Collections** (`/imports/api/`): `CustomersCollection`, `NotesCollection`, `LinksCollection`
+- **Collections** (`/imports/api/`): `CustomersCollection`, `NotesCollection`
 - **Publications** (`/server/main.js`): Must be registered at module load time (outside `Meteor.startup`)
 - **Methods** (`/server/main.js`): RPC calls for mutations - always validate `this.userId` and permissions
 - **Async operations**: Use `insertAsync`, `updateAsync`, `findOneAsync` etc. (sync versions deprecated)
