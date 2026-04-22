@@ -6,6 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Pink Diamond Collective (PDC) - A CRM application built with Meteor.js and React 18 for managing customers and notes.
 
+Stack: Meteor (full-stack framework), React 18, MongoDB, Mocha (tests).
+
 ## Commands
 
 ```bash
