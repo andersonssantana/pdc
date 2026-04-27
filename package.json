@@ -5,7 +5,9 @@
     "start": "meteor run",
     "test": "meteor test --once --driver-package meteortesting:mocha",
     "test-app": "TEST_WATCH=1 meteor test --full-app --driver-package meteortesting:mocha",
-    "visualize": "meteor --production --extra-packages bundle-visualizer"
+    "visualize": "meteor --production --extra-packages bundle-visualizer",
+    "galaxy:verify": "node --version && npm --version",
+    "galaxy:install": "meteor npm ci && meteor npm run galaxy:verify"
   },
   "dependencies": {
     "@babel/runtime": "^7.23.5",
