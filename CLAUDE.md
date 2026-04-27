@@ -57,3 +57,5 @@ Meteor.call("customers.insert", data, (error, result) => {...});
 - **Customer**: name (required), phone, description, notes
 - **Note**: content (required), customerId, createdByName
 - **User**: username, profile.name, profile.role
+
+#### test
