@@ -53,7 +53,16 @@ Meteor.publish("users.all", async function () {
 
 // Startup: seed data only
 Meteor.startup(async () => {
+  console.log("Meteor Startup");
   await seedAdminUser();
+    try {
+    const path = Assets.absoluteFilePath('certificate.crt');
+    const exists = require('fs').existsSync(path);
+    console.log('[TLS Debug] Resolved path:', path);
+    console.log('[TLS Debug] File exists:', exists);
+  } catch (e) {
+    console.log('[TLS Debug] Assets error:', e.message);
+  }
 });
 
 Meteor.methods({
@@ -75,7 +84,7 @@ Meteor.methods({
     const user = await Meteor.users.findOneAsync(this.userId);
     const userName = user?.profile?.name || user?.username || "Unknown";
 
-    return await CustomersCollection.insertAsync({
+    const result = await CustomersCollection.insertAsync({
       name: name.trim(),
       phone: normalizedPhones[0] || "",
       phones: normalizedPhones,
@@ -88,6 +97,8 @@ Meteor.methods({
       updatedBy: this.userId,
       updatedByName: userName
     });
+    console.log(`[customers.insert] Customer created: "${name.trim()}" by ${userName}`);
+    return result;
   },
 
   async "customers.update"(customerId, customerData) {
@@ -113,7 +124,7 @@ Meteor.methods({
     const user = await Meteor.users.findOneAsync(this.userId);
     const userName = user?.profile?.name || user?.username || "Unknown";
 
-    return await CustomersCollection.updateAsync(customerId, {
+    const result = await CustomersCollection.updateAsync(customerId, {
       $set: {
         name: name.trim(),
         phone: normalizedPhones[0] || "",
@@ -125,6 +136,8 @@ Meteor.methods({
         updatedByName: userName
       }
     });
+    console.log(`[customers.update] Customer updated: "${name.trim()}" (${customerId}) by ${userName}`);
+    return result;
   },
 
   async "customers.remove"(customerId) {
@@ -140,7 +153,9 @@ Meteor.methods({
     // Also delete all notes for this customer
     await NotesCollection.removeAsync({ customerId });
 
-    return await CustomersCollection.removeAsync(customerId);
+    const result = await CustomersCollection.removeAsync(customerId);
+    console.log(`[customers.remove] Customer removed: ${customerId} by ${user?.profile?.name || user?.username}`);
+    return result;
   },
 
   async "notes.insert"(noteData) {
@@ -162,13 +177,15 @@ Meteor.methods({
     const user = await Meteor.users.findOneAsync(this.userId);
     const createdByName = user?.profile?.name || user?.username || "Unknown";
 
-    return await NotesCollection.insertAsync({
+    const result = await NotesCollection.insertAsync({
       customerId,
       content: content.trim(),
       createdAt: new Date(),
       createdBy: this.userId,
       createdByName
     });
+    console.log(`[notes.insert] Note added to customer ${customerId} by ${createdByName}`);
+    return result;
   },
 
   async "notes.remove"(noteId) {
@@ -188,7 +205,9 @@ Meteor.methods({
       throw new Meteor.Error("not-authorized", "You can only delete your own notes");
     }
 
-    return await NotesCollection.removeAsync(noteId);
+    const result = await NotesCollection.removeAsync(noteId);
+    console.log(`[notes.remove] Note removed: ${noteId} by ${user?.profile?.name || user?.username}`);
+    return result;
   },
 
   async "users.create"(userData) {
@@ -220,7 +239,7 @@ Meteor.methods({
       throw new Meteor.Error("invalid-data", "Username already exists");
     }
 
-    return await Accounts.createUserAsync({
+    const result = await Accounts.createUserAsync({
       username: username.trim(),
       password,
       profile: {
@@ -228,6 +247,8 @@ Meteor.methods({
         role: ROLES.USER
       }
     });
+    console.log(`[users.create] New user created: ${username.trim()} (${name.trim()}) by ${currentUser?.profile?.name || currentUser?.username}`);
+    return result;
   },
 
   async "users.remove"(userId) {
@@ -249,7 +270,9 @@ Meteor.methods({
       throw new Meteor.Error("not-found", "User not found");
     }
 
-    return await Meteor.users.removeAsync(userId);
+    const result = await Meteor.users.removeAsync(userId);
+    console.log(`[users.remove] User removed: ${userToDelete.username} by ${currentUser?.profile?.name || currentUser?.username}`);
+    return result;
   },
 
   async "users.setPassword"(userId, newPassword) {
@@ -272,6 +295,7 @@ Meteor.methods({
     }
 
     await Accounts.setPasswordAsync(userId, newPassword);
+    console.log(`[users.setPassword] Password reset for: ${userToUpdate.username} by ${currentUser?.profile?.name || currentUser?.username}`);
     return true;
   }
 });
