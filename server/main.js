@@ -3,6 +3,7 @@ import { Accounts } from "meteor/accounts-base";
 import { CustomersCollection } from "/imports/api/customers";
 import { NotesCollection } from "/imports/api/notes";
 import { ROLES, isAdmin } from "/imports/api/users";
+import fs from 'fs';
 
 async function seedAdminUser() {
   const existingAdmin = await Accounts.findUserByUsername("admin");
@@ -55,11 +56,10 @@ Meteor.publish("users.all", async function () {
 Meteor.startup(async () => {
   console.log("Meteor Startup");
   await seedAdminUser();
-    try {
-    const path = Assets.absoluteFilePath('certificate.crt');
-    const exists = require('fs').existsSync(path);
-    console.log('[TLS Debug] Resolved path:', path);
-    console.log('[TLS Debug] File exists:', exists);
+      try {
+    const certPath = Assets.absoluteFilePath('certificate.crt');
+    console.log('[TLS Debug] Resolved path:', certPath);
+    console.log('[TLS Debug] File exists:', fs.existsSync(certPath));
   } catch (e) {
     console.log('[TLS Debug] Assets error:', e.message);
   }
