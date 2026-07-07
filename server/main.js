@@ -4,6 +4,12 @@ import { CustomersCollection } from "/imports/api/customers";
 import { NotesCollection } from "/imports/api/notes";
 import { ROLES, isAdmin } from "/imports/api/users";
 import fs from 'fs';
+import os from "os";
+import { Worker } from "worker_threads";
+
+let stressMemoryBalloon = null;
+let stressMemoryTimer = null;
+let stressRunning = false;
 
 async function seedAdminUser() {
   const existingAdmin = await Accounts.findUserByUsername("admin");
@@ -297,5 +303,100 @@ Meteor.methods({
     await Accounts.setPasswordAsync(userId, newPassword);
     console.log(`[users.setPassword] Password reset for: ${userToUpdate.username} by ${currentUser?.profile?.name || currentUser?.username}`);
     return true;
+  },
+
+  async "system.stressTest"(options = {}) {
+    if (!this.userId) {
+      throw new Meteor.Error("not-authorized", "You must be logged in");
+    }
+
+    const currentUser = await Meteor.users.findOneAsync(this.userId);
+    if (!isAdmin(currentUser)) {
+      throw new Meteor.Error("not-authorized", "Only admins can run the stress test");
+    }
+
+    const { cpu = true, memory = true } = options;
+    if (!cpu && !memory) {
+      throw new Meteor.Error("invalid-data", "Enable CPU and/or memory stress");
+    }
+
+    const durationSeconds = options.durationSeconds ?? 10;
+    if (!Number.isFinite(durationSeconds) || durationSeconds < 1 || durationSeconds > 30) {
+      throw new Meteor.Error("invalid-data", "durationSeconds must be between 1 and 30");
+    }
+
+    const maxWorkers = os.cpus().length;
+    const workers = options.workers ?? Math.min(2, maxWorkers);
+    if (!Number.isInteger(workers) || workers < 1 || workers > maxWorkers) {
+      throw new Meteor.Error("invalid-data", `workers must be between 1 and ${maxWorkers}`);
+    }
+
+    const memoryMb = options.memoryMb ?? 256;
+    if (!Number.isFinite(memoryMb) || memoryMb < 1 || memoryMb > 512) {
+      throw new Meteor.Error("invalid-data", "memoryMb must be between 1 and 512");
+    }
+
+    if (stressRunning) {
+      throw new Meteor.Error("invalid-operation", "A stress test is already running");
+    }
+    stressRunning = true;
+
+    const durationMs = durationSeconds * 1000;
+    const before = process.memoryUsage();
+    console.log(
+      `[system.stressTest] START cpu=${cpu} workers=${workers} memory=${memory} memoryMb=${memoryMb} durationSeconds=${durationSeconds} ` +
+      `rssBefore=${Math.round(before.rss / 1048576)}MB by ${currentUser?.profile?.name || currentUser?.username}`
+    );
+
+    try {
+      if (memory) {
+        stressMemoryBalloon = Buffer.alloc(memoryMb * 1048576, 1);
+        if (stressMemoryTimer) clearTimeout(stressMemoryTimer);
+        stressMemoryTimer = setTimeout(() => {
+          stressMemoryBalloon = null;
+          stressMemoryTimer = null;
+        }, durationMs);
+      }
+
+      const workerPromises = [];
+      if (cpu) {
+        const workerSource = `
+          const { workerData } = require('worker_threads');
+          const end = Date.now() + workerData.durationMs;
+          let x = 0;
+          while (Date.now() < end) {
+            for (let i = 0; i < 1e6; i++) { x += Math.sqrt(i) * Math.sin(i); }
+          }
+        `;
+        for (let i = 0; i < workers; i++) {
+          workerPromises.push(new Promise((resolve) => {
+            const w = new Worker(workerSource, { eval: true, workerData: { durationMs } });
+            w.on("exit", () => resolve());
+            w.on("error", () => resolve());
+          }));
+        }
+      }
+
+      await Promise.all(workerPromises);
+      if (!cpu && memory) {
+        await new Promise((resolve) => setTimeout(resolve, durationMs));
+      }
+
+      const after = process.memoryUsage();
+      console.log(
+        `[system.stressTest] DONE rssAfter=${Math.round(after.rss / 1048576)}MB ` +
+        `heapUsed=${Math.round(after.heapUsed / 1048576)}MB`
+      );
+      return {
+        ok: true,
+        durationSeconds,
+        workers: cpu ? workers : 0,
+        memoryMb: memory ? memoryMb : 0,
+        rssBeforeMb: Math.round(before.rss / 1048576),
+        rssAfterMb: Math.round(after.rss / 1048576),
+      };
+    } finally {
+      stressRunning = false;
+    }
   }
 });

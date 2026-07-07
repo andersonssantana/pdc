@@ -805,6 +805,12 @@ a {
   margin-bottom: var(--spacing-lg);
 }
 
+.admin-header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
 .users-list {
   display: flex;
   flex-direction: column;
@@ -1170,6 +1176,12 @@ a {
 
   /* -- Admin Panel -- */
   .admin-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--spacing-sm);
+  }
+
+  .admin-header-actions {
     flex-direction: column;
     align-items: stretch;
     gap: var(--spacing-sm);

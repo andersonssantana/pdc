@@ -9,6 +9,8 @@ export const AdminPanel = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showStressConfirm, setShowStressConfirm] = useState(false);
+  const [stressResult, setStressResult] = useState(null);
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
@@ -72,6 +74,35 @@ export const AdminPanel = () => {
     });
   };
 
+  const handleStressClick = () => {
+    setStressResult(null);
+    setError("");
+    setShowStressConfirm(true);
+  };
+
+  const handleStressConfirm = () => {
+    setIsSubmitting(true);
+    setError("");
+    Meteor.call(
+      "system.stressTest",
+      { cpu: true, memory: true, durationSeconds: 10 },
+      (err, res) => {
+        setIsSubmitting(false);
+        if (err) {
+          setError(err.reason || "Stress test failed");
+        } else {
+          setStressResult(res);
+        }
+      }
+    );
+  };
+
+  const closeStressConfirm = () => {
+    setShowStressConfirm(false);
+    setStressResult(null);
+    setError("");
+  };
+
   const closePasswordModal = () => {
     setShowPasswordModal(false);
     setSelectedUser(null);
@@ -94,12 +125,20 @@ export const AdminPanel = () => {
     <div className="admin-panel">
       <div className="admin-header">
         <h2 className="section-title">User Management</h2>
-        <button
-          className="button"
-          onClick={() => setShowForm(true)}
-        >
-          Add User
-        </button>
+        <div className="admin-header-actions">
+          <button
+            className="button button-secondary"
+            onClick={handleStressClick}
+          >
+            Stress Test
+          </button>
+          <button
+            className="button"
+            onClick={() => setShowForm(true)}
+          >
+            Add User
+          </button>
+        </div>
       </div>
 
       {users.length === 0 ? (
@@ -232,6 +271,44 @@ export const AdminPanel = () => {
               >
                 {isSubmitting ? "Deleting..." : "Delete"}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showStressConfirm && (
+        <div className="modal-overlay modal-overlay--confirm" onClick={closeStressConfirm}>
+          <div className="modal card confirm-modal" onClick={(e) => e.stopPropagation()}>
+            <h3>Run Server Stress Test</h3>
+            <p>
+              This will intentionally spike this server's CPU and memory for
+              ~10 seconds to test monitoring and autoscaling. The app stays
+              responsive, but expect elevated load. Continue?
+            </p>
+            {error && <div className="error-message">{error}</div>}
+            {stressResult && (
+              <div className="error-message">
+                Done. RSS {stressResult.rssBeforeMb}MB &rarr; {stressResult.rssAfterMb}MB,{" "}
+                {stressResult.workers} CPU worker(s), {stressResult.memoryMb}MB held.
+              </div>
+            )}
+            <div className="modal-actions">
+              <button
+                className="button button-secondary"
+                onClick={closeStressConfirm}
+                disabled={isSubmitting}
+              >
+                {stressResult ? "Close" : "Cancel"}
+              </button>
+              {!stressResult && (
+                <button
+                  className="button button-danger"
+                  onClick={handleStressConfirm}
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? "Running..." : "Run Stress Test"}
+                </button>
+              )}
             </div>
           </div>
         </div>
