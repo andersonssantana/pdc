@@ -11,6 +11,7 @@ export const AdminPanel = () => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showStressConfirm, setShowStressConfirm] = useState(false);
   const [stressResult, setStressResult] = useState(null);
+  const [stressDurationMinutes, setStressDurationMinutes] = useState(5);
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
@@ -77,15 +78,20 @@ export const AdminPanel = () => {
   const handleStressClick = () => {
     setStressResult(null);
     setError("");
+    setStressDurationMinutes(5);
     setShowStressConfirm(true);
   };
 
   const handleStressConfirm = () => {
+    if (!Number.isFinite(stressDurationMinutes) || stressDurationMinutes < 1 || stressDurationMinutes > 10) {
+      setError("Duration must be between 1 and 10 minutes");
+      return;
+    }
     setIsSubmitting(true);
     setError("");
     Meteor.call(
       "system.stressTest",
-      { cpu: true, memory: true, durationSeconds: 10 },
+      { cpu: true, memory: true, durationSeconds: stressDurationMinutes * 60 },
       (err, res) => {
         setIsSubmitting(false);
         if (err) {
@@ -281,10 +287,24 @@ export const AdminPanel = () => {
           <div className="modal card confirm-modal" onClick={(e) => e.stopPropagation()}>
             <h3>Run Server Stress Test</h3>
             <p>
-              This will intentionally spike this server's CPU and memory for
-              ~10 seconds to test monitoring and autoscaling. The app stays
-              responsive, but expect elevated load. Continue?
+              This will intentionally spike this server's CPU and memory to
+              test monitoring and autoscaling. The app stays responsive, but
+              expect elevated load for the duration below.
             </p>
+            {!stressResult && (
+              <div className="form-group">
+                <label className="form-label">Duration (minutes)</label>
+                <input
+                  type="number"
+                  className="form-input"
+                  min={1}
+                  max={10}
+                  value={stressDurationMinutes}
+                  onChange={(e) => setStressDurationMinutes(Number(e.target.value))}
+                  disabled={isSubmitting}
+                />
+              </div>
+            )}
             {error && <div className="error-message">{error}</div>}
             {stressResult && (
               <div className="error-message">

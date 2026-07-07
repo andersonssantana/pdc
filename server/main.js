@@ -321,8 +321,8 @@ Meteor.methods({
     }
 
     const durationSeconds = options.durationSeconds ?? 10;
-    if (!Number.isFinite(durationSeconds) || durationSeconds < 1 || durationSeconds > 30) {
-      throw new Meteor.Error("invalid-data", "durationSeconds must be between 1 and 30");
+    if (!Number.isFinite(durationSeconds) || durationSeconds < 1 || durationSeconds > 600) {
+      throw new Meteor.Error("invalid-data", "durationSeconds must be between 1 and 600 (10 minutes)");
     }
 
     const maxWorkers = os.cpus().length;
