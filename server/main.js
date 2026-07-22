@@ -11,6 +11,23 @@ let stressMemoryBalloon = null;
 let stressMemoryTimer = null;
 let stressRunning = false;
 
+const HEARTBEAT_PHRASES = [
+  "heartbeat tick",
+  "background check",
+  "periodic ping",
+  "status ok",
+  "routine log",
+];
+
+function scheduleHeartbeatLog() {
+  const delayMs = 1000 + Math.floor(Math.random() * 4000); // 1-5s
+  setTimeout(() => {
+    const phrase = HEARTBEAT_PHRASES[Math.floor(Math.random() * HEARTBEAT_PHRASES.length)];
+    console.log(`[heartbeat] ${new Date().toISOString()} - "${phrase}"`);
+    scheduleHeartbeatLog();
+  }, delayMs);
+}
+
 async function seedAdminUser() {
   const existingAdmin = await Accounts.findUserByUsername("admin");
   if (!existingAdmin) {
@@ -62,6 +79,7 @@ Meteor.publish("users.all", async function () {
 Meteor.startup(async () => {
   console.log("Meteor Startup");
   await seedAdminUser();
+  scheduleHeartbeatLog();
       try {
     const certPath = Assets.absoluteFilePath('certificate.crt');
     console.log('[TLS Debug] Resolved path:', certPath);
