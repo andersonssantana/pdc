@@ -11,6 +11,108 @@ let stressMemoryBalloon = null;
 let stressMemoryTimer = null;
 let stressRunning = false;
 
+// --- Log flood -------------------------------------------------------------
+// Emits a high, steady volume of log lines so we can exercise log shipping,
+// retention and the "download logs" path with a realistically large bundle.
+
+const LOG_FLOOD_TICK_MS = 50;
+const LOG_FLOOD_LEVELS = ["INFO", "DEBUG", "TRACE", "WARN", "ERROR"];
+const LOG_FLOOD_COMPONENTS = [
+  "customers", "notes", "users", "sync", "billing",
+  "search-index", "mailer", "webhooks", "cache", "scheduler",
+];
+const LOG_FLOOD_ACTIONS = [
+  "request handled", "document upserted", "subscription flushed",
+  "cache miss, refetching", "retrying after transient failure",
+  "oplog batch applied", "session token refreshed",
+  "payload validated", "index rebuild step complete",
+  "outbound webhook delivered",
+];
+
+let logFlood = null; // { bytes, lines, endsAt, targetBytesPerSec, timer, paused }
+
+function randomHex(length) {
+  let out = "";
+  while (out.length < length) out += Math.random().toString(16).slice(2);
+  return out.slice(0, length);
+}
+
+function buildLogFloodLine(seq) {
+  const level = LOG_FLOOD_LEVELS[seq % LOG_FLOOD_LEVELS.length];
+  const component = LOG_FLOOD_COMPONENTS[Math.floor(Math.random() * LOG_FLOOD_COMPONENTS.length)];
+  const action = LOG_FLOOD_ACTIONS[Math.floor(Math.random() * LOG_FLOOD_ACTIONS.length)];
+  return (
+    `${new Date().toISOString()} ${level} [logflood/${component}] seq=${seq} ` +
+    `action="${action}" reqId=${randomHex(24)} traceId=${randomHex(32)} ` +
+    `userId=${randomHex(17)} durationMs=${(Math.random() * 400).toFixed(3)} ` +
+    `bytes=${Math.floor(Math.random() * 65536)} status=${200 + (seq % 5)} ` +
+    `payload=${randomHex(256)}`
+  );
+}
+
+function stopLogFlood(reason) {
+  if (!logFlood) return null;
+  if (logFlood.timer) clearTimeout(logFlood.timer);
+  const summary = {
+    lines: logFlood.lines,
+    bytes: logFlood.bytes,
+    megabytes: Math.round(logFlood.bytes / 1048576),
+    elapsedSeconds: Math.round((Date.now() - logFlood.startedAt) / 1000),
+  };
+  logFlood = null;
+  console.log(
+    `[system.logFlood] STOP reason=${reason} lines=${summary.lines} ` +
+    `mb=${summary.megabytes} elapsedSeconds=${summary.elapsedSeconds}`
+  );
+  return summary;
+}
+
+function logFloodTick() {
+  if (!logFlood) return;
+
+  if (Date.now() >= logFlood.endsAt) {
+    stopLogFlood("duration-elapsed");
+    return;
+  }
+
+  const budget = Math.round((logFlood.targetBytesPerSec * LOG_FLOOD_TICK_MS) / 1000);
+  const chunk = [];
+  let written = 0;
+  while (written < budget) {
+    const line = buildLogFloodLine(logFlood.lines + chunk.length);
+    chunk.push(line);
+    written += line.length + 1;
+  }
+
+  logFlood.lines += chunk.length;
+  logFlood.bytes += written;
+
+  const flowing = process.stdout.write(chunk.join("\n") + "\n");
+  if (!flowing) {
+    // stdout is backed up (slow log collector / pipe). Wait for drain instead
+    // of queueing more chunks in memory.
+    logFlood.timer = null;
+    process.stdout.once("drain", () => {
+      if (logFlood && !logFlood.timer) logFlood.timer = setTimeout(logFloodTick, LOG_FLOOD_TICK_MS);
+    });
+    return;
+  }
+
+  logFlood.timer = setTimeout(logFloodTick, LOG_FLOOD_TICK_MS);
+}
+
+function logFloodStatus() {
+  if (!logFlood) return { running: false };
+  return {
+    running: true,
+    lines: logFlood.lines,
+    bytes: logFlood.bytes,
+    megabytes: Math.round(logFlood.bytes / 1048576),
+    targetMbPerSec: +(logFlood.targetBytesPerSec / 1048576).toFixed(2),
+    secondsRemaining: Math.max(0, Math.round((logFlood.endsAt - Date.now()) / 1000)),
+  };
+}
+
 const HEARTBEAT_PHRASES = [
   "heartbeat tick",
   "background check",
@@ -416,5 +518,79 @@ Meteor.methods({
     } finally {
       stressRunning = false;
     }
+  },
+
+  async "system.logFlood.start"(options = {}) {
+    if (!this.userId) {
+      throw new Meteor.Error("not-authorized", "You must be logged in");
+    }
+
+    const currentUser = await Meteor.users.findOneAsync(this.userId);
+    if (!isAdmin(currentUser)) {
+      throw new Meteor.Error("not-authorized", "Only admins can run the log flood");
+    }
+
+    if (logFlood) {
+      throw new Meteor.Error("invalid-operation", "A log flood is already running");
+    }
+
+    const mbPerSec = options.mbPerSec ?? 5;
+    if (!Number.isFinite(mbPerSec) || mbPerSec < 0.1 || mbPerSec > 50) {
+      throw new Meteor.Error("invalid-data", "mbPerSec must be between 0.1 and 50");
+    }
+
+    const durationSeconds = options.durationSeconds ?? 120;
+    if (!Number.isFinite(durationSeconds) || durationSeconds < 1 || durationSeconds > 3600) {
+      throw new Meteor.Error("invalid-data", "durationSeconds must be between 1 and 3600 (1 hour)");
+    }
+
+    const targetBytesPerSec = Math.round(mbPerSec * 1048576);
+    logFlood = {
+      lines: 0,
+      bytes: 0,
+      startedAt: Date.now(),
+      endsAt: Date.now() + durationSeconds * 1000,
+      targetBytesPerSec,
+      timer: null,
+    };
+
+    console.log(
+      `[system.logFlood] START mbPerSec=${mbPerSec} durationSeconds=${durationSeconds} ` +
+      `estimatedTotalMb=${Math.round(mbPerSec * durationSeconds)} ` +
+      `by ${currentUser?.profile?.name || currentUser?.username}`
+    );
+
+    logFlood.timer = setTimeout(logFloodTick, LOG_FLOOD_TICK_MS);
+
+    return {
+      ok: true,
+      mbPerSec,
+      durationSeconds,
+      estimatedTotalMb: Math.round(mbPerSec * durationSeconds),
+    };
+  },
+
+  async "system.logFlood.status"() {
+    if (!this.userId) {
+      throw new Meteor.Error("not-authorized", "You must be logged in");
+    }
+    return logFloodStatus();
+  },
+
+  async "system.logFlood.stop"() {
+    if (!this.userId) {
+      throw new Meteor.Error("not-authorized", "You must be logged in");
+    }
+
+    const currentUser = await Meteor.users.findOneAsync(this.userId);
+    if (!isAdmin(currentUser)) {
+      throw new Meteor.Error("not-authorized", "Only admins can stop the log flood");
+    }
+
+    const summary = stopLogFlood("stopped-by-admin");
+    if (!summary) {
+      throw new Meteor.Error("invalid-operation", "No log flood is running");
+    }
+    return summary;
   }
 });

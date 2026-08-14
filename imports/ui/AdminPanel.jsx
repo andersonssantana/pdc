@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Meteor } from "meteor/meteor";
 import { useSubscribe, useFind, useTracker } from "meteor/react-meteor-data";
 import { UserForm } from "./UserForm";
@@ -12,6 +12,10 @@ export const AdminPanel = () => {
   const [showStressConfirm, setShowStressConfirm] = useState(false);
   const [stressResult, setStressResult] = useState(null);
   const [stressDurationMinutes, setStressDurationMinutes] = useState(5);
+  const [showLogFloodModal, setShowLogFloodModal] = useState(false);
+  const [logFloodMbPerSec, setLogFloodMbPerSec] = useState(5);
+  const [logFloodMinutes, setLogFloodMinutes] = useState(2);
+  const [logFloodStatus, setLogFloodStatus] = useState(null);
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
@@ -103,6 +107,61 @@ export const AdminPanel = () => {
     );
   };
 
+  // Poll the server while the log flood modal is open so the admin can watch
+  // the volume climb and stop it early once it is big enough.
+  useEffect(() => {
+    if (!showLogFloodModal) return;
+    const poll = () => {
+      Meteor.call("system.logFlood.status", (err, res) => {
+        if (!err) setLogFloodStatus(res);
+      });
+    };
+    poll();
+    const id = setInterval(poll, 1000);
+    return () => clearInterval(id);
+  }, [showLogFloodModal]);
+
+  const handleLogFloodClick = () => {
+    setError("");
+    setLogFloodStatus(null);
+    setShowLogFloodModal(true);
+  };
+
+  const handleLogFloodStart = () => {
+    if (!Number.isFinite(logFloodMbPerSec) || logFloodMbPerSec < 0.1 || logFloodMbPerSec > 50) {
+      setError("Rate must be between 0.1 and 50 MB/s");
+      return;
+    }
+    if (!Number.isFinite(logFloodMinutes) || logFloodMinutes < 1 || logFloodMinutes > 60) {
+      setError("Duration must be between 1 and 60 minutes");
+      return;
+    }
+    setIsSubmitting(true);
+    setError("");
+    Meteor.call(
+      "system.logFlood.start",
+      { mbPerSec: logFloodMbPerSec, durationSeconds: logFloodMinutes * 60 },
+      (err) => {
+        setIsSubmitting(false);
+        if (err) setError(err.reason || "Failed to start log flood");
+      }
+    );
+  };
+
+  const handleLogFloodStop = () => {
+    setIsSubmitting(true);
+    Meteor.call("system.logFlood.stop", (err) => {
+      setIsSubmitting(false);
+      if (err) setError(err.reason || "Failed to stop log flood");
+    });
+  };
+
+  const closeLogFloodModal = () => {
+    setShowLogFloodModal(false);
+    setLogFloodStatus(null);
+    setError("");
+  };
+
   const closeStressConfirm = () => {
     setShowStressConfirm(false);
     setStressResult(null);
@@ -137,6 +196,12 @@ export const AdminPanel = () => {
             onClick={handleStressClick}
           >
             Stress Test
+          </button>
+          <button
+            className="button button-secondary"
+            onClick={handleLogFloodClick}
+          >
+            Log Flood
           </button>
           <button
             className="button"
@@ -327,6 +392,87 @@ export const AdminPanel = () => {
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? "Running..." : "Run Stress Test"}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showLogFloodModal && (
+        <div className="modal-overlay modal-overlay--confirm" onClick={closeLogFloodModal}>
+          <div className="modal card confirm-modal" onClick={(e) => e.stopPropagation()}>
+            <h3>Generate Log Volume</h3>
+            <p>
+              Writes a steady stream of synthetic log lines to this server's
+              stdout so the log pipeline and log download can be tested with a
+              large bundle. Closing this dialog does not stop the run.
+            </p>
+            {!logFloodStatus?.running && (
+              <>
+                <div className="form-group">
+                  <label className="form-label">Rate (MB/s)</label>
+                  <input
+                    type="number"
+                    className="form-input"
+                    min={0.1}
+                    max={50}
+                    step={0.5}
+                    value={logFloodMbPerSec}
+                    onChange={(e) => setLogFloodMbPerSec(Number(e.target.value))}
+                    disabled={isSubmitting}
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Duration (minutes)</label>
+                  <input
+                    type="number"
+                    className="form-input"
+                    min={1}
+                    max={60}
+                    value={logFloodMinutes}
+                    onChange={(e) => setLogFloodMinutes(Number(e.target.value))}
+                    disabled={isSubmitting}
+                  />
+                </div>
+                <p>
+                  Estimated total:{" "}
+                  <strong>{Math.round(logFloodMbPerSec * logFloodMinutes * 60)} MB</strong>
+                </p>
+              </>
+            )}
+            {logFloodStatus?.running && (
+              <div className="error-message">
+                Running &mdash; {logFloodStatus.megabytes} MB written{" "}
+                ({logFloodStatus.lines.toLocaleString()} lines),{" "}
+                {logFloodStatus.secondsRemaining}s remaining at{" "}
+                {logFloodStatus.targetMbPerSec} MB/s.
+              </div>
+            )}
+            {error && <div className="error-message">{error}</div>}
+            <div className="modal-actions">
+              <button
+                className="button button-secondary"
+                onClick={closeLogFloodModal}
+                disabled={isSubmitting}
+              >
+                Close
+              </button>
+              {logFloodStatus?.running ? (
+                <button
+                  className="button button-danger"
+                  onClick={handleLogFloodStop}
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? "Stopping..." : "Stop"}
+                </button>
+              ) : (
+                <button
+                  className="button button-danger"
+                  onClick={handleLogFloodStart}
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? "Starting..." : "Start"}
                 </button>
               )}
             </div>
